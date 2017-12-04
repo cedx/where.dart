@@ -2,6 +2,7 @@
 This file contains highlights of what changes on each version of the [Where.dart](https://github.com/cedx/where.dart) project.
 
 ## Version [3.0.0](https://github.com/cedx/where.dart/compare/v2.1.1...v2.2.0)
+- Updated the package dependencies.
 
 ## Version [2.2.0](https://github.com/cedx/where.dart/compare/v2.1.1...v2.2.0)
 - Updated the package dependencies.
