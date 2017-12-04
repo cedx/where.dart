@@ -1,7 +1,6 @@
 #!/usr/bin/env dart
 
 import 'dart:async';
-import 'dart:io';
 import 'dart:isolate';
 import 'package:args/args.dart';
 import 'package:where/where.dart';
@@ -28,7 +27,7 @@ final String usage = (new StringBuffer()
 /// The version number of this package.
 Future<String> get version async {
   var uri = (await Isolate.resolvePackageUri(Uri.parse('package:where/'))).resolve('../pubspec.yaml');
-  var pubspec = loadYaml(await new File(uri.toFilePath()).readAsString());
+  var pubspec = loadYaml(await fileSystem.file(uri.toFilePath(windows: platform.isWindows)).readAsString());
   return pubspec['version'];
 }
 
@@ -38,7 +37,7 @@ Future main(List<String> args) async {
   ArgResults results;
 
   try {
-    results = _parser.parse(args);
+    results = _parser.parse(const bool.fromEnvironment('node') ? arguments : args);
     if (results['help']) {
       print(usage);
       exit(0);

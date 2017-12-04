@@ -12,13 +12,13 @@ class Finder {
 
     if (path is! List<String>) path = path.toString().split(pathSeparator)..retainWhere((item) => item.isNotEmpty);
     if (path.isEmpty) {
-      var pathEnv = Platform.environment['PATH'] ?? '';
+      var pathEnv = platform.environment['PATH'] ?? '';
       if (pathEnv.isNotEmpty) path = pathEnv.split(pathSeparator);
     }
 
     if (extensions is! List<String>) extensions = extensions.toString().split(pathSeparator)..retainWhere((item) => item.isNotEmpty);
     if (extensions.isEmpty && isWindows) {
-      var pathExt = Platform.environment['PATHEXT'] ?? '';
+      var pathExt = platform.environment['PATHEXT'] ?? '';
       extensions = pathExt.isNotEmpty ? pathExt.split(pathSeparator) : ['.exe', '.cmd', '.bat', '.com'];
     }
 
@@ -31,8 +31,8 @@ class Finder {
 
   /// Value indicating whether the current platform is Windows.
   static bool get isWindows {
-    if (Platform.isWindows) return true;
-    return Platform.environment['OSTYPE'] == 'cygwin' || Platform.environment['OSTYPE'] == 'msys';
+    if (platform.isWindows) return true;
+    return platform.environment['OSTYPE'] == 'cygwin' || platform.environment['OSTYPE'] == 'msys';
   }
 
   /// The list of system paths.
@@ -54,13 +54,13 @@ class Finder {
 
   /// Gets a value indicating whether the specified [file] is executable.
   Future<bool> isExecutable(String file) async {
-    if (!await FileSystemEntity.isFile(file)) return false;
+    if (!await fileSystem.isFile(file)) return false;
     return isWindows ? _checkFileExtension(file) : _checkFilePermissions(await FileStat.stat(file));
   }
 
   /// Checks that the specified [file] is executable according to the executable file extensions.
   bool _checkFileExtension(String file) =>
-    extensions.contains(p.extension(file).toUpperCase()) || extensions.contains(file.toUpperCase());
+    extensions.contains(fileSystem.path.extension(file).toUpperCase()) || extensions.contains(file.toUpperCase());
 
   /// Checks that the file referenced by the specified [fileStats] is executable according to its permissions.
   Future<bool> _checkFilePermissions(FileStat fileStats) async {
@@ -84,8 +84,9 @@ class Finder {
 
   /// Finds the instances of a [command] in the specified [directory].
   Stream<String> _findExecutables(String directory, String command) async* {
+    final path = fileSystem.path;
     for (var extension in ['']..addAll(extensions)) {
-      var resolvedPath = p.canonicalize('${p.join(directory, command)}${extension.toLowerCase()}');
+      var resolvedPath = path.canonicalize('${path.join(directory, command)}${extension.toLowerCase()}');
       if (await isExecutable(resolvedPath)) yield resolvedPath;
     }
   }
@@ -93,14 +94,14 @@ class Finder {
   /// Returns the numeric identity of the process's group, or `-1` if an error occurred.
   Future<int> _getProcessGid() async {
     if (isWindows) return -1;
-    var result = await Process.run('id', ['-g']);
+    var result = await processManager.run(['id', '-g']);
     return result.exitCode != 0 ? -1 : int.parse(result.stdout.trim(), radix: 10, onError: (_) => -1);
   }
 
   /// Returns the numeric identity of the process's owner, or `-1` if an error occurred.
   Future<int> _getProcessUid() async {
     if (isWindows) return -1;
-    var result = await Process.run('id', ['-u']);
+    var result = await processManager.run(['id', '-u']);
     return result.exitCode != 0 ? -1 : int.parse(result.stdout.trim(), radix: 10, onError: (_) => -1);
   }
 }
