@@ -1,5 +1,10 @@
 # Changelog
 
+## Version [5.0.0](https://github.com/cedx/where.dart/compare/v4.4.0...v5.0.0)
+- Breaking change: renamed the `FileStats` class to `FileStat`.
+- The `FileStat` class now implements the `FileStat` class from `dart:io`.
+- Updated the package dependencies.
+
 ## Version [4.4.0](https://github.com/cedx/where.dart/compare/v4.3.1...v4.4.0)
 - Updated the package dependencies.
 

@@ -8,17 +8,17 @@ class Finder {
   /// - [path]: A string, or a list of strings, specifying the system path. Defaults to the `PATH` environment variable.
   /// - [pathSeparator]: The character used to separate paths in the system path. Defaults to the platform path separator.
   Finder({extensions = '', path = '', this.pathSeparator = ''}) {
-    if (pathSeparator.isEmpty) pathSeparator = Platform.isWindows ? ';' : ':';
+    if (pathSeparator.isEmpty) pathSeparator = io.Platform.isWindows ? ';' : ':';
 
     if (path is! List<String>) path = path.toString().split(pathSeparator)..retainWhere((item) => item.isNotEmpty);
     if (path.isEmpty) {
-      final pathEnv = Platform.environment['PATH'] ?? '';
+      final pathEnv = io.Platform.environment['PATH'] ?? '';
       if (pathEnv.isNotEmpty) path = pathEnv.split(pathSeparator);
     }
 
     if (extensions is! List<String>) extensions = extensions.toString().split(pathSeparator)..retainWhere((item) => item.isNotEmpty);
-    if (extensions.isEmpty && Platform.isWindows) {
-      final pathExt = Platform.environment['PATHEXT'] ?? '';
+    if (extensions.isEmpty && io.Platform.isWindows) {
+      final pathExt = io.Platform.environment['PATHEXT'] ?? '';
       extensions = pathExt.isNotEmpty ? pathExt.split(pathSeparator) : ['.exe', '.cmd', '.bat', '.com'];
     }
 
@@ -42,9 +42,9 @@ class Finder {
 
   /// Gets a value indicating whether the specified [file] is executable.
   Future<bool> isExecutable(String file) async {
-    final type = FileSystemEntity.typeSync(file);
-    if (type != FileSystemEntityType.file && type != FileSystemEntityType.link) return false;
-    return Platform.isWindows ? _checkFileExtension(file) : _checkFilePermissions(await FileStats.stat(file));
+    final type = io.FileSystemEntity.typeSync(file);
+    if (type != io.FileSystemEntityType.file && type != io.FileSystemEntityType.link) return false;
+    return io.Platform.isWindows ? _checkFileExtension(file) : _checkFilePermissions(await FileStat.stat(file));
   }
 
   /// Checks that the specified [file] is executable according to the executable file extensions.
@@ -52,7 +52,7 @@ class Finder {
     extensions.contains(p.extension(file).toLowerCase()) || extensions.contains(file.toLowerCase());
 
   /// Checks that the file referenced by the specified [fileStats] is executable according to its permissions.
-  Future<bool> _checkFilePermissions(FileStats fileStats) async {
+  Future<bool> _checkFilePermissions(FileStat fileStats) async {
     // Others.
     final perms = fileStats.mode;
     if (perms & int.parse('001', radix: 8) != 0) return true;
@@ -80,14 +80,14 @@ class Finder {
 
   /// Gets a numeric identity of the process.
   Future<int> _getProcessId(String identity) async {
-    if (Platform.isWindows) return -1;
-    final result = await Process.run('id', ['-$identity']);
+    if (io.Platform.isWindows) return -1;
+    final result = await io.Process.run('id', ['-$identity']);
     return result.exitCode != 0 ? -1 : int.tryParse(result.stdout.trim(), radix: 10) ?? -1;
   }
 }
 
 /// An exception caused by a [Finder] in a command lookup.
-class FinderException implements IOException {
+class FinderException implements io.IOException {
 
   /// Creates a new finder exception.
   FinderException(this.command, this.finder, [this.message = '']);
