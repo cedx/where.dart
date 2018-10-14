@@ -1,6 +1,7 @@
 part of '../io.dart';
 
-/// Provides statistics about a file system entity.
+/// Represents the result of calling the POSIX [`stat`](http://manpages.ubuntu.com/manpages/xenial/man2/stat.2.html) function on a file system entity.
+/// It is an immutable object, representing the snapshotted values returned by the `stat()` call.
 class FileStat implements io.FileStat {
 
   /// Creates new file stats from the specified native [stats].
