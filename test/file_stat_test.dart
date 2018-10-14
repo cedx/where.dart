@@ -46,4 +46,12 @@ void main() => group('FileStat', () {
       expect(fileStats.gid, Platform.isWindows ? equals(-1) : greaterThanOrEqualTo(0));
     });
   });
+
+  group('.toString()', () {
+    test('should return the class name and the file mode as a human-readable string', () async {
+      final data = (await FileStat.stat('test/file_stat_test.dart')).toString();
+      expect(data.indexOf('FileStat("'), equals(0));
+      expect(data, matches(RegExp(r'([r\-][w\-][x\-]){3}"\)$')));
+    });
+  });
 });
