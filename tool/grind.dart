@@ -17,7 +17,7 @@ void clean() {
 
 @Task('Uploads the results of the code coverage')
 void coverage() {
-  final arguments = ['--base-directory=${Directory.current.path}', '--in=var/test', '--lcov', '--out=var/lcov.info'];
+  final arguments = ['--base-directory=.', '--in=var/test', '--lcov', '--out=var/lcov.info', '--packages=.packages', '--report-on=lib'];
   Pub.run('coverage', script: 'format_coverage', arguments: arguments);
   Pub.global.run('coveralls', arguments: ['var/lcov.info']);
 }
