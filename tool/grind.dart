@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:grinder/grinder.dart' hide ProcessException;
 
@@ -17,7 +16,11 @@ void clean() {
 }
 
 @Task('Uploads the results of the code coverage')
-void coverage() => Pub.global.run('coveralls', arguments: ['var/lcov.info']);
+void coverage() {
+  final arguments = ['--base-directory=${Directory.current.path}', '--in=var/test', '--lcov', '--out=var/lcov.info'];
+  Pub.run('coverage', script: 'format_coverage', arguments: arguments);
+  Pub.global.run('coveralls', arguments: ['var/lcov.info']);
+}
 
 @Task('Builds the documentation')
 Future<void> doc() async {
@@ -37,7 +40,7 @@ void lint() => Analyzer.analyze(existingSourceDirs);
 void publish() => run('pub', arguments: ['publish', '--force'], runOptions: RunOptions(runInShell: true));
 
 @Task('Runs the test suites')
-Future<void> test() => _profileTest('test/all.dart', 'var/lcov.info');
+void test() => Pub.run('build_runner', arguments: ['test', '--delete-conflicting-outputs', '--', '--coverage=var']);
 
 @Task('Upgrades the project to the latest revision')
 void upgrade() {
@@ -49,31 +52,3 @@ void upgrade() {
 
 @Task('Watches for file changes')
 void watch() => Pub.run('build_runner', arguments: ['watch', '--delete-conflicting-outputs']);
-
-/// Profiles the execution of the specified [source] test file,
-/// and writes the resulting code coverage to the given [output] file.
-Future<void> _profileTest(source, output) async {
-  final inputFile = FilePath(source).asFile;
-  final serviceUriCompleter = Completer<Uri>();
-
-  final process = await Process.start('dart', ['--disable-service-auth-codes', '--enable-asserts', '--enable-vm-service', '--pause-isolates-on-exit', inputFile.path]);
-  process.stderr.transform(utf8.decoder).transform(const LineSplitter()).listen(log);
-  process.stdout.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
-    log(line);
-    if (!serviceUriCompleter.isCompleted) {
-      final match = RegExp(r'^Observatory listening on (.*)$').firstMatch(line);
-      final uri = match != null ? match[1].trim() : 'http://127.0.0.1:8181/';
-      serviceUriCompleter.complete(Uri.parse(uri));
-    }
-  });
-
-  final coverage = joinFile(Directory.systemTemp, ['dart_coverage_${DateTime.now().millisecondsSinceEpoch}.json']);
-  var arguments = ['--out=${coverage.path}', '--resume-isolates', '--uri=${await serviceUriCompleter.future}', '--wait-paused'];
-  await Pub.runAsync('coverage', script: 'collect_coverage', arguments: arguments);
-
-  final exitCode = await process.exitCode;
-  if (exitCode != 0) throw ProcessException(inputFile.absolute.path, [], 'Script terminated with exit code $exitCode.', exitCode);
-
-  arguments = ['--in=${coverage.path}', '--lcov', '--out=${FilePath(output).asFile.path}', '--packages=.packages', '--report-on=${libDir.path}'];
-  return Pub.runAsync('coverage', script: 'format_coverage', arguments: arguments);
-}
