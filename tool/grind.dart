@@ -40,7 +40,8 @@ void lint() => Analyzer.analyze(existingSourceDirs);
 void publish() => run('pub', arguments: ['publish', '--force'], runOptions: RunOptions(runInShell: true));
 
 @Task('Runs the test suites')
-void test() => Pub.run('build_runner', arguments: ['test', '--delete-conflicting-outputs', '--', '--coverage=var']);
+@Depends(build)
+void test() => Pub.run('test', arguments: ['--coverage=var']);
 
 @Task('Upgrades the project to the latest revision')
 void upgrade() {
